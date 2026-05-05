@@ -1,26 +1,86 @@
 @import "tailwindcss";
-
+ 
+/* ─── Variables ─────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #07070f;
+  --foreground: #ede8e0;
+ 
+  --accent:     rgba(196, 174, 208, 0.85);
+  --accent-dim: rgba(196, 174, 208, 0.35);
+  --border-dim: rgba(200, 170, 220, 0.1);
+ 
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans:  'Inter', system-ui, sans-serif;
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+ 
+/* ─── Reset base ────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+ 
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
-
+ 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
+ 
+/* ─── Scrollbar oculta (mantiene funcionalidad) ─────────── */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+ 
+/* ─── Selección de texto ────────────────────────────────── */
+::selection {
+  background: rgba(196, 174, 208, 0.2);
+  color: #f0e8f5;
+}
+ 
+/* ─── Tipografía base ───────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  color: var(--foreground);
+}
+ 
+p {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(220, 210, 225, 0.75);
+}
+ 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+ 
+button {
+  font-family: var(--font-sans);
+  cursor: none;
+  border: none;
+  background: none;
+}
+ 
+img {
+  display: block;
+  max-width: 100%;
+}
+ 
