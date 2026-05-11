@@ -148,11 +148,17 @@ export default function Poemas() {
           display: flex; align-items: center; justify-content: center;
         }
         .modal-card {
-          width: min(420px, 92vw); height: min(780px, 90vh);
-          border-radius: 20px; overflow: hidden; position: relative;
-          border: 0.5px solid rgba(200,170,220,0.15);
-          background: #07070f; display: flex; flex-direction: column;
-        }
+  width: min(420px, 92vw);
+  height: min(780px, 90vh);
+  min-height: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  border: 0.5px solid rgba(200,170,220,0.15);
+  background: #07070f;
+  display: flex;
+  flex-direction: column;
+}
         .modal-img-wrap { position: relative; flex: 0 0 55%; overflow: hidden; }
         .modal-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .modal-img-gradient {
@@ -187,16 +193,31 @@ export default function Poemas() {
           font-size: clamp(1.1rem, 4vw, 1.5rem); color: rgba(240,232,245,0.95);
           letter-spacing: 0.04em; line-height: 1.2;
         }
-        .modal-poem-wrap {
-          flex: 1; overflow-y: auto; padding: 24px 28px 32px;
-          display: flex; align-items: center; justify-content: center; scrollbar-width: none;
-        }
-        .modal-poem-wrap::-webkit-scrollbar { display: none; }
-        .modal-poem {
-          font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic;
-          font-size: clamp(1.1rem, 3.5vw, 1.4rem); color: rgba(215,205,225,0.85);
-          line-height: 1.85; letter-spacing: 0.02em; white-space: pre-line; text-align: center;
-        }
+      .modal-poem-wrap {
+  flex: 1;
+  min-height: 0;          /* ← clave: permite que flex shrink funcione */
+  overflow-y: auto;
+  padding: 24px 28px 32px;
+  display: flex;
+  align-items: flex-start; /* ← cambia de center a flex-start */
+  justify-content: center;
+  scrollbar-width: none;
+}
+.modal-poem-wrap::-webkit-scrollbar { display: none; }
+
+.modal-poem {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+  color: rgba(215,205,225,0.85);
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  white-space: pre-line;
+  text-align: center;
+  padding-top: 12px;      /* ← compensa el align-items: flex-start */
+  width: 100%;
+}
         .nav-dot {
           width: 4px; height: 4px; border-radius: 50%;
           background: rgba(200,170,220,0.3); transition: background 0.3s, transform 0.3s;
@@ -364,25 +385,74 @@ export default function Poemas() {
                     </div>
 
                     {/* Nav */}
-                    <div style={{ padding: "0 20px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <button
-                        onClick={() => handleSwipe("right")}
-                        disabled={activeIndex === 0}
-                        style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", cursor: "none", color: activeIndex === 0 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)", background: "none", border: "none", transition: "color 0.3s" }}
-                      >← ant</button>
+                 {/* Nav */}
+<div style={{
+  padding: "0 8px 16px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+}}>
+  <button
+    onClick={() => handleSwipe("right")}
+    disabled={activeIndex === 0}
+    style={{
+      fontFamily: "'Inter', sans-serif",
+      fontSize: "0.6rem",
+      letterSpacing: "0.15em",
+      textTransform: "uppercase",
+      cursor: "none",
+      color: activeIndex === 0 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)",
+      background: "none",
+      border: "0.5px solid currentColor",
+      borderRadius: "100px",
+      padding: "6px 14px",
+      transition: "color 0.3s",
+      flexShrink: 0,
+      whiteSpace: "nowrap",
+    }}
+  >← ant</button>
 
-                      <div style={{ display: "flex", gap: 5 }}>
-                        {posts.map((_, i) => (
-                          <div key={i} className={`nav-dot ${i === activeIndex ? "active" : ""}`} onClick={() => setActiveIndex(i)} />
-                        ))}
-                      </div>
+  {/* dots — scroll horizontal si hay muchos */}
+  <div style={{
+    display: "flex",
+    gap: 5,
+    overflowX: "auto",
+    scrollbarWidth: "none",
+    padding: "4px 0",
+    flexShrink: 1,
+    justifyContent: "center",
+  }}>
+    {posts.map((_, i) => (
+      <div
+        key={i}
+        className={`nav-dot ${i === activeIndex ? "active" : ""}`}
+        onClick={() => setActiveIndex(i)}
+        style={{ flexShrink: 0 }}
+      />
+    ))}
+  </div>
 
-                      <button
-                        onClick={() => handleSwipe("left")}
-                        disabled={activeIndex === posts.length - 1}
-                        style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", cursor: "none", color: activeIndex === posts.length - 1 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)", background: "none", border: "none", transition: "color 0.3s" }}
-                      >sig →</button>
-                    </div>
+  <button
+    onClick={() => handleSwipe("left")}
+    disabled={activeIndex === posts.length - 1}
+    style={{
+      fontFamily: "'Inter', sans-serif",
+      fontSize: "0.6rem",
+      letterSpacing: "0.15em",
+      textTransform: "uppercase",
+      cursor: "none",
+      color: activeIndex === posts.length - 1 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)",
+      background: "none",
+      border: "0.5px solid currentColor",
+      borderRadius: "100px",
+      padding: "6px 14px",
+      transition: "color 0.3s",
+      flexShrink: 0,
+      whiteSpace: "nowrap",
+    }}
+  >sig →</button>
+</div>
 
                     <div style={{ paddingBottom: 14, display: "flex", justifyContent: "center" }}>
                       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.5rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(180,165,190,0.25)" }}>
