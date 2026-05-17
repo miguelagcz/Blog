@@ -1,18 +1,20 @@
 "use client";
-
+ 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import { posts, totalTemporadas, toRoman } from "@/data/posts";
-
+ 
 export default function Poemas() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [closing, setClosing] = useState(false);
-
+  const [loaded, setLoaded] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
+ 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
   const springX = useSpring(cursorX, { stiffness: 80, damping: 20 });
   const springY = useSpring(cursorY, { stiffness: 80, damping: 20 });
-
+ 
   useEffect(() => {
     const move = (e: MouseEvent) => {
       cursorX.set(e.clientX - 6);
@@ -21,7 +23,7 @@ export default function Poemas() {
     window.addEventListener("mousemove", move);
     return () => window.removeEventListener("mousemove", move);
   }, []);
-
+ 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,37 +52,61 @@ export default function Poemas() {
     drawGrain();
     return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
   }, []);
-
+ 
+  // Preload: espera a que todas las imágenes carguen (o max 2s) antes de mostrar el grid
   useEffect(() => {
-    posts.forEach((p) => { const img = new Image(); img.src = p.image; });
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; setImagesReady(true); }
+    }, 2000);
+ 
+    let count = 0;
+    const total = posts.length;
+    posts.forEach((p) => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        count++;
+        if (count === total && !resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          // pequeño delay para que la transición se vea suave
+          setTimeout(() => setImagesReady(true), 200);
+        }
+      };
+      img.src = p.image;
+    });
+ 
+    // Marcar página como montada
+    setLoaded(true);
+    return () => clearTimeout(timeout);
   }, []);
-
+ 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [activeIndex]);
-
+ 
   const handleClose = () => {
     setClosing(true);
     setTimeout(() => { setActiveIndex(null); setClosing(false); }, 350);
   };
-
+ 
   const handleSwipe = (direction: "left" | "right") => {
     if (activeIndex === null) return;
     if (direction === "left" && activeIndex < posts.length - 1) setActiveIndex(activeIndex + 1);
     if (direction === "right" && activeIndex > 0) setActiveIndex(activeIndex - 1);
   };
-
+ 
   const activePost = activeIndex !== null ? posts[activeIndex] : null;
-
+ 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@200;300&display=swap');
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { background: #07070f; cursor: none; }
-
+ 
         .cursor-dot {
           position: fixed; width: 12px; height: 12px;
           border-radius: 50%; background: rgba(200,170,220,0.7);
@@ -93,6 +119,39 @@ export default function Poemas() {
           position: fixed; border-radius: 50%;
           filter: blur(90px); pointer-events: none; z-index: 0;
         }
+ 
+        /* ── Skeleton ─────────────────────────────────────────── */
+        @keyframes shimmer {
+          0%   { background-position: -600px 0; }
+          100% { background-position:  600px 0; }
+        }
+        .skeleton-card {
+          position: relative; width: 100%; aspect-ratio: 9/16;
+          border-radius: 14px; overflow: hidden;
+          border: 0.5px solid rgba(200,170,220,0.06);
+          background: rgba(255,255,255,0.03);
+        }
+        .skeleton-card::after {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(200,170,220,0.06) 40%,
+            rgba(200,170,220,0.12) 50%,
+            rgba(200,170,220,0.06) 60%,
+            transparent 100%
+          );
+          background-size: 600px 100%;
+          animation: shimmer 2s ease-in-out infinite;
+        }
+        .skeleton-line {
+          border-radius: 100px;
+          background: rgba(200,170,220,0.07);
+          position: absolute;
+        }
+ 
+        /* ── Cards ────────────────────────────────────────────── */
         .poem-card {
           position: relative; width: 100%; aspect-ratio: 9/16;
           border-radius: 14px; overflow: hidden; cursor: none;
@@ -139,6 +198,8 @@ export default function Poemas() {
           display: -webkit-box; -webkit-line-clamp: 3;
           -webkit-box-orient: vertical; overflow: hidden;
         }
+ 
+        /* ── Modal ────────────────────────────────────────────── */
         .modal-backdrop {
           position: fixed; inset: 0; background: rgba(5,5,12,0.88);
           z-index: 100; backdrop-filter: blur(12px);
@@ -148,17 +209,11 @@ export default function Poemas() {
           display: flex; align-items: center; justify-content: center;
         }
         .modal-card {
-  width: min(420px, 92vw);
-  height: min(780px, 90vh);
-  min-height: 0;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-  border: 0.5px solid rgba(200,170,220,0.15);
-  background: #07070f;
-  display: flex;
-  flex-direction: column;
-}
+          width: min(420px, 92vw); height: min(780px, 90vh);
+          min-height: 0; border-radius: 20px; overflow: hidden; position: relative;
+          border: 0.5px solid rgba(200,170,220,0.15);
+          background: #07070f; display: flex; flex-direction: column;
+        }
         .modal-img-wrap { position: relative; flex: 0 0 55%; overflow: hidden; }
         .modal-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .modal-img-gradient {
@@ -193,37 +248,26 @@ export default function Poemas() {
           font-size: clamp(1.1rem, 4vw, 1.5rem); color: rgba(240,232,245,0.95);
           letter-spacing: 0.04em; line-height: 1.2;
         }
-      .modal-poem-wrap {
-  flex: 1;
-  min-height: 0;          /* ← clave: permite que flex shrink funcione */
-  overflow-y: auto;
-  padding: 24px 28px 32px;
-  display: flex;
-  align-items: flex-start; /* ← cambia de center a flex-start */
-  justify-content: center;
-  scrollbar-width: none;
-}
-.modal-poem-wrap::-webkit-scrollbar { display: none; }
-
-.modal-poem {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 300;
-  font-style: italic;
-  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
-  color: rgba(215,205,225,0.85);
-  line-height: 1.85;
-  letter-spacing: 0.02em;
-  white-space: pre-line;
-  text-align: center;
-  padding-top: 12px;      /* ← compensa el align-items: flex-start */
-  width: 100%;
-}
+        .modal-poem-wrap {
+          flex: 1; min-height: 0; overflow-y: auto;
+          padding: 24px 28px 32px;
+          display: flex; align-items: flex-start; justify-content: center;
+          scrollbar-width: none;
+        }
+        .modal-poem-wrap::-webkit-scrollbar { display: none; }
+        .modal-poem {
+          font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic;
+          font-size: clamp(1.1rem, 3.5vw, 1.4rem); color: rgba(215,205,225,0.85);
+          line-height: 1.85; letter-spacing: 0.02em; white-space: pre-line;
+          text-align: center; padding-top: 12px; width: 100%;
+        }
         .nav-dot {
           width: 4px; height: 4px; border-radius: 50%;
           background: rgba(200,170,220,0.3); transition: background 0.3s, transform 0.3s;
-          cursor: none;
+          cursor: none; flex-shrink: 0;
         }
         .nav-dot.active { background: rgba(200,170,220,0.85); transform: scale(1.4); }
+ 
         @keyframes star-twinkle { 0%,100% { opacity: 0.12; } 50% { opacity: 0.38; } }
         @keyframes drift1 {
           0%,100% { transform: translate(0,0) scale(1); }
@@ -235,13 +279,13 @@ export default function Poemas() {
           50% { transform: translate(-90px,-60px) scale(1.12); }
         }
       `}</style>
-
+ 
       <canvas ref={canvasRef} className="grain-canvas" />
       <motion.div className="cursor-dot" style={{ x: springX, y: springY, position: "fixed", zIndex: 9999 }} />
-
+ 
       <div className="blob" style={{ width: 500, height: 500, background: "radial-gradient(circle, rgba(110,70,170,0.11) 0%, transparent 70%)", top: -120, left: -120, animation: "drift1 20s ease-in-out infinite" }} />
       <div className="blob" style={{ width: 380, height: 380, background: "radial-gradient(circle, rgba(50,90,155,0.09) 0%, transparent 70%)", bottom: -80, right: -60, animation: "drift2 25s ease-in-out infinite" }} />
-
+ 
       <svg style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1 }} preserveAspectRatio="xMidYMid slice">
         {[[120,90],[380,150],[720,55],[980,140],[1100,250],[70,420],[1160,520],[580,740],[195,700],[920,710],[440,360],[800,440]].map(([cx, cy], i) => (
           <circle key={i} cx={cx} cy={cy} r={0.6 + (i % 3) * 0.4}
@@ -250,13 +294,13 @@ export default function Poemas() {
           />
         ))}
       </svg>
-
+ 
       <main style={{ position: "relative", zIndex: 10, minHeight: "100vh", background: "#07070f", fontFamily: "'Cormorant Garamond', serif" }}>
-
-        {/* Header */}
+ 
+        {/* Header — aparece siempre */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={{ opacity: loaded ? 1 : 0, y: loaded ? 0 : -16 }}
           transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           style={{ padding: "2rem 1.5rem 1rem", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}
         >
@@ -267,7 +311,6 @@ export default function Poemas() {
             </h2>
           </div>
           <div style={{ width: "0.5px", height: 32, background: "rgba(200,170,220,0.2)" }} />
-          {/* Header derecho: temporadas dinámicas */}
           <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 200, fontSize: "0.6rem", letterSpacing: "0.14em", color: "rgba(180,165,190,0.4)", textAlign: "right" }}>
             {posts.length} poemas<br />
             {Array.from({ length: totalTemporadas }, (_, i) => (
@@ -277,41 +320,67 @@ export default function Poemas() {
             ))}
           </p>
         </motion.div>
-
+ 
         {/* Divider */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
+          animate={{ scaleX: loaded ? 1 : 0, opacity: loaded ? 1 : 0 }}
           transition={{ duration: 1.2, delay: 0.3 }}
           style={{ height: "0.5px", background: "rgba(200,170,220,0.1)", margin: "0 1.5rem 1.8rem", transformOrigin: "left" }}
         />
-
+ 
         {/* Grid */}
         <div style={{ padding: "0 1rem 3rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "10px" }}>
-          {posts.map((post, i) => (
-            <motion.div
-              key={post.id}
-              className="poem-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 + i * 0.04, ease: [0.16, 1, 0.3, 1] }}
-              onClick={() => setActiveIndex(i)}
-            >
-              <img src={post.image} alt={post.title} />
-              <div className="card-overlay" />
-              <div className="card-meta">
-                <span className="meta-tag">T{post.temporada}</span>
-                <span className="meta-tag">E{String(post.episodio).padStart(2, "0")}</span>
-              </div>
-              <div className="card-content">
-                <div className="card-title">{post.title}</div>
-                <div className="card-poem">{post.text}</div>
-              </div>
-            </motion.div>
-          ))}
+          <AnimatePresence mode="wait">
+            {!imagesReady ? (
+              // ── SKELETON ────────────────────────────────────────
+              <>
+                {Array.from({ length: posts.length }).map((_, i) => (
+                  <motion.div
+                    key={`sk-${i}`}
+                    className="skeleton-card"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.02 }}
+                  >
+                    {/* Líneas decorativas que simulan texto */}
+                    <div className="skeleton-line" style={{ bottom: 44, left: 14, right: 40, height: 7 }} />
+                    <div className="skeleton-line" style={{ bottom: 30, left: 14, right: 60, height: 5 }} />
+                    <div className="skeleton-line" style={{ bottom: 18, left: 14, right: 50, height: 5 }} />
+                  </motion.div>
+                ))}
+              </>
+            ) : (
+              // ── CARDS REALES ─────────────────────────────────────
+              <>
+                {posts.map((post, i) => (
+                  <motion.div
+                    key={post.id}
+                    className="poem-card"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: i * 0.03, ease: [0.16, 1, 0.3, 1] }}
+                    onClick={() => setActiveIndex(i)}
+                  >
+                    <img src={post.image} alt={post.title} />
+                    <div className="card-overlay" />
+                    <div className="card-meta">
+                      <span className="meta-tag">T{post.temporada}</span>
+                      <span className="meta-tag">E{String(post.episodio).padStart(2, "0")}</span>
+                    </div>
+                    <div className="card-content">
+                      <div className="card-title">{post.title}</div>
+                      <div className="card-poem">{post.text}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </main>
-
+ 
       {/* Modal */}
       <AnimatePresence>
         {activeIndex !== null && !closing && (
@@ -370,7 +439,7 @@ export default function Poemas() {
                         </AnimatePresence>
                       </div>
                     </div>
-
+ 
                     <div className="modal-poem-wrap">
                       <AnimatePresence mode="wait">
                         <motion.p
@@ -383,77 +452,28 @@ export default function Poemas() {
                         </motion.p>
                       </AnimatePresence>
                     </div>
-
+ 
                     {/* Nav */}
-                 {/* Nav */}
-<div style={{
-  padding: "0 8px 16px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "8px",
-}}>
-  <button
-    onClick={() => handleSwipe("right")}
-    disabled={activeIndex === 0}
-    style={{
-      fontFamily: "'Inter', sans-serif",
-      fontSize: "0.6rem",
-      letterSpacing: "0.15em",
-      textTransform: "uppercase",
-      cursor: "none",
-      color: activeIndex === 0 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)",
-      background: "none",
-      border: "0.5px solid currentColor",
-      borderRadius: "100px",
-      padding: "6px 14px",
-      transition: "color 0.3s",
-      flexShrink: 0,
-      whiteSpace: "nowrap",
-    }}
-  >← ant</button>
-
-  {/* dots — scroll horizontal si hay muchos */}
-  <div style={{
-    display: "flex",
-    gap: 5,
-    overflowX: "auto",
-    scrollbarWidth: "none",
-    padding: "4px 0",
-    flexShrink: 1,
-    justifyContent: "center",
-  }}>
-    {posts.map((_, i) => (
-      <div
-        key={i}
-        className={`nav-dot ${i === activeIndex ? "active" : ""}`}
-        onClick={() => setActiveIndex(i)}
-        style={{ flexShrink: 0 }}
-      />
-    ))}
-  </div>
-
-  <button
-    onClick={() => handleSwipe("left")}
-    disabled={activeIndex === posts.length - 1}
-    style={{
-      fontFamily: "'Inter', sans-serif",
-      fontSize: "0.6rem",
-      letterSpacing: "0.15em",
-      textTransform: "uppercase",
-      cursor: "none",
-      color: activeIndex === posts.length - 1 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)",
-      background: "none",
-      border: "0.5px solid currentColor",
-      borderRadius: "100px",
-      padding: "6px 14px",
-      transition: "color 0.3s",
-      flexShrink: 0,
-      whiteSpace: "nowrap",
-    }}
-  >sig →</button>
-</div>
-
+                    <div style={{ padding: "0 8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                      <button
+                        onClick={() => handleSwipe("right")}
+                        disabled={activeIndex === 0}
+                        style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", cursor: "none", color: activeIndex === 0 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)", background: "none", border: "0.5px solid currentColor", borderRadius: "100px", padding: "6px 14px", transition: "color 0.3s", flexShrink: 0, whiteSpace: "nowrap" }}
+                      >← ant</button>
+ 
+                      <div style={{ display: "flex", gap: 5, overflowX: "auto", scrollbarWidth: "none", padding: "4px 0", flexShrink: 1, justifyContent: "center" }}>
+                        {posts.map((_, i) => (
+                          <div key={i} className={`nav-dot ${i === activeIndex ? "active" : ""}`} onClick={() => setActiveIndex(i)} />
+                        ))}
+                      </div>
+ 
+                      <button
+                        onClick={() => handleSwipe("left")}
+                        disabled={activeIndex === posts.length - 1}
+                        style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", cursor: "none", color: activeIndex === posts.length - 1 ? "rgba(180,165,190,0.2)" : "rgba(200,170,220,0.55)", background: "none", border: "0.5px solid currentColor", borderRadius: "100px", padding: "6px 14px", transition: "color 0.3s", flexShrink: 0, whiteSpace: "nowrap" }}
+                      >sig →</button>
+                    </div>
+ 
                     <div style={{ paddingBottom: 14, display: "flex", justifyContent: "center" }}>
                       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.5rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(180,165,190,0.25)" }}>
                         desliza abajo para cerrar
