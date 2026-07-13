@@ -94,10 +94,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // ── Verificación (agrega tu código cuando lo tengas) ─────────
-  // verification: {
-  //   google: "TU_CÓDIGO_DE_SEARCH_CONSOLE",
-  // },
 };
 
 export default function RootLayout({

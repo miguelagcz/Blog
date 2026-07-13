@@ -3,6 +3,8 @@
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { posts, totalTemporadas, toRoman } from "@/data/posts";
+import { tracks } from "@/data/music";
+import MusicCard from "@/components/MusicCard";
 
 export default function Home() {
   // ── Cursor ──────────────────────────────────────────────────
@@ -14,6 +16,7 @@ export default function Home() {
   // ── Grain ────────────────────────────────────────────────────
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef  = useRef(0);
+  
 
   // ── Poems state ─────────────────────────────────────────────
   const [loaded,       setLoaded]       = useState(false);
@@ -23,6 +26,8 @@ export default function Home() {
   const [traduccion,   setTraduccion]   = useState<string | null>(null);
   const [idioma,       setIdioma]       = useState("es");
   const [traduciendo,  setTraduciendo]  = useState(false);
+  const [view, setView] = useState<"poemas" | "musica">("poemas");
+  
 
   // ── Scroll-to-poems ─────────────────────────────────────────
   const poemsRef = useRef<HTMLDivElement>(null);
@@ -520,7 +525,6 @@ export default function Home() {
           </svg>
         </motion.button>
       </section>
-
       {/* ══════════════════════════════════════════════════════════
           SECCIÓN 2 — POEMAS
       ══════════════════════════════════════════════════════════ */}
@@ -529,7 +533,7 @@ export default function Home() {
         style={{ position:"relative", zIndex:10, minHeight:"100vh", background:"transparent" }}
       >
         {/* Header */}
-        <motion.div
+      <motion.div
           initial={{ opacity:0, y:-16 }}
           animate={{ opacity: loaded ? 1 : 0, y: loaded ? 0 : -16 }}
           transition={{ duration:0.7, delay:0.1, ease:[0.16,1,0.3,1] }}
@@ -548,8 +552,32 @@ export default function Home() {
               <span key={i} style={{ color:"rgba(200,170,220,0.35)", display:"block" }}>temporada {toRoman(i+1)}</span>
             ))}
           </p>
-        </motion.div>
+      </motion.div>
 
+<div style={{ display:"flex", justifyContent:"center", gap:8, margin:"0.5rem 0 1.5rem" }}>
+          <button
+            onClick={() => setView("poemas")}
+            style={{
+              fontFamily:"'Inter',sans-serif", fontSize:"0.6rem", letterSpacing:"0.18em",
+              textTransform:"uppercase", cursor:"none",
+              padding:"6px 16px", borderRadius:"100px", transition:"all 0.25s",
+              border: view==="poemas" ? "0.5px solid rgba(200,170,220,0.6)" : "0.5px solid rgba(200,170,220,0.15)",
+              background: view==="poemas" ? "rgba(130,80,170,0.2)" : "transparent",
+              color: view==="poemas" ? "rgba(210,190,225,0.9)" : "rgba(180,165,190,0.4)",
+            }}
+          >poemas</button>
+          <button
+            onClick={() => setView("musica")}
+            style={{
+              fontFamily:"'Inter',sans-serif", fontSize:"0.6rem", letterSpacing:"0.18em",
+              textTransform:"uppercase", cursor:"none",
+              padding:"6px 16px", borderRadius:"100px", transition:"all 0.25s",
+              border: view==="musica" ? "0.5px solid rgba(200,170,220,0.6)" : "0.5px solid rgba(200,170,220,0.15)",
+              background: view==="musica" ? "rgba(130,80,170,0.2)" : "transparent",
+              color: view==="musica" ? "rgba(210,190,225,0.9)" : "rgba(180,165,190,0.4)",
+            }}
+          >música</button>
+        </div>
         {/* Divider */}
         <motion.div
           initial={{ scaleX:0, opacity:0 }}
@@ -559,12 +587,12 @@ export default function Home() {
         />
 
         {/* Grid */}
+        {view === "poemas" && (
         <div style={{ padding:"0 1rem 3rem", display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(140px, 1fr))", gap:"10px" }}>
           {posts.map((post, i) => {
             const ready = cardReady[post.id] ?? false;
             return (
               <div key={post.id} style={{ position:"relative", width:"100%", aspectRatio:"9/16" }}>
-
                 {/* Skeleton */}
                 <AnimatePresence>
                   {!ready && (
@@ -611,7 +639,35 @@ export default function Home() {
             );
           })}
         </div>
+        )}
+        {/* Grid Música */}
+        {view === "musica" && (
+        <div style={{ padding:"0 1rem 3rem", display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:"12px" }}>
+          {tracks.map((t) => (
+            <div key={t.id} style={{
+              border:"0.5px solid rgba(200,170,220,0.1)", borderRadius:14,
+              padding:"1.4rem 1rem", display:"flex", flexDirection:"column",
+              alignItems:"center", justifyContent:"center", textAlign:"center",
+              minHeight:140, gap:10,
+            }}>
+              <p style={{ fontFamily:"'Cormorant Garamond', serif", fontStyle:"italic", fontWeight:300, fontSize:"1rem", color:"rgba(230,220,235,0.9)" }}>
+                {t.title}
+              </p>
+              {t.comingSoon || !t.link ? (
+                <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.55rem", letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(200,180,215,0.5)", border:"0.5px solid rgba(200,170,220,0.2)", borderRadius:100, padding:"4px 10px" }}>
+                  próximamente
+                </span>
+              ) : (
+                <a href={t.link} target="_blank" rel="noopener noreferrer" style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.6rem", letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(200,170,220,0.7)", border:"0.5px solid rgba(200,170,220,0.3)", borderRadius:100, padding:"6px 14px", textDecoration:"none" }}>
+                  escuchar
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+        )}
       </section>
+
 
       {/* ══════════════════════════════════════════════════════════
           MODAL
@@ -696,7 +752,6 @@ export default function Home() {
                           <div key={i} className={`nav-dot ${i===activeIndex?"active":""}`} onClick={() => setActiveIndex(i)} />
                         ))}
                       </div>
-
                       <button
                         onClick={() => handleSwipe("left")}
                         disabled={activeIndex === posts.length-1}
