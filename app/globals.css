@@ -84,3 +84,37 @@ img {
   max-width: 100%;
 }
  
+/* ─── Hero grid ─────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  border-bottom: 0.5px solid rgba(210,200,215,0.08);
+}
+
+/* ─── Glitch sobre foto grande ──────────────────────────── */
+@keyframes glitch-img {
+  0%,89%,100% { opacity: 0; transform: translate(0,0); }
+  91% { opacity: 0.35; transform: translate(-3px,1px); filter: hue-rotate(80deg); }
+  93% { opacity: 0.18; transform: translate(3px,-1px); filter: hue-rotate(200deg); }
+  95% { opacity: 0; }
+}
+
+.avatar-glitch {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  background-size: cover;
+  background-position: center top;
+  mix-blend-mode: screen;
+  animation: glitch-img 7s ease-in-out infinite;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+/* ─── Scroll arrow float ────────────────────────────────── */
+@keyframes arrow-float {
+  0%,100% { opacity: 0.22; transform: translateY(0); }
+  50%      { opacity: 0.52; transform: translateY(7px); }
+}
+.scroll-arrow { animation: arrow-float 2.5s ease-in-out infinite; }
