@@ -194,140 +194,150 @@ export default function MusicPlayer({ tracks, hidden = false }: Props) {
   return (
     <div className="mp-root" style={{ display: hidden ? "none" : "block" }}>
       <style>{`
-        .mp-root { padding: 0 1rem 4rem; }
+        .mp-root { padding: 0 0 4rem; }
+
+        /* ── Tarjeta principal ── */
         .mp-player {
-          width: min(480px, 100%); margin: 0 auto 2rem;
-          padding: 1.6rem 1.4rem 1.3rem; border-radius: 20px;
-          border: 0.5px solid rgba(200,170,220,0.14);
-          background: linear-gradient(160deg, rgba(130,80,170,0.10), rgba(7,7,15,0.55));
-          backdrop-filter: blur(14px);
-          display: flex; flex-direction: column; align-items: center;
+          width: min(760px, 100%); margin: 0 auto 1.6rem;
+          display: grid; grid-template-columns: 230px 1fr; gap: 1.8rem; align-items: center;
+          padding: 1.5rem;
+          background: linear-gradient(160deg, #1b1b1d 0%, #121213 60%);
+          border: 1px solid rgba(205,210,218,0.16);
+          border-radius: 22px;
+          box-shadow: 0 30px 60px -30px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
         }
         .mp-cover {
-          position: relative; width: 168px; height: 168px; border-radius: 50%;
-          margin-bottom: 1.3rem; flex-shrink: 0;
-          border: 0.5px solid rgba(200,170,220,0.25);
-          box-shadow: 0 0 60px rgba(130,80,170,0.18);
-          animation: mp-spin 18s linear infinite; animation-play-state: paused;
-          overflow: hidden;
+          position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden;
+          border: 1px solid rgba(205,210,218,0.22);
+          box-shadow: 0 18px 40px -18px rgba(0,0,0,0.95);
+          background: #000;
         }
-        .mp-cover.on { animation-play-state: running; }
-        .mp-cover img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.7) brightness(0.85); }
+        .mp-cover img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.05) brightness(0.9); }
         .mp-cover::after {
-          content: ''; position: absolute; top: 50%; left: 50%;
-          width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%,-50%);
-          background: #07070f; border: 0.5px solid rgba(200,170,220,0.3);
+          content: ''; position: absolute; inset: 0; pointer-events: none;
+          background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 40%, rgba(0,0,0,0.35) 100%);
         }
-        @keyframes mp-spin { to { transform: rotate(360deg); } }
+
+        .mp-info { min-width: 0; display: flex; flex-direction: column; }
+        .mp-kicker {
+          font-family: var(--font-sans), sans-serif; font-weight: 300; font-size: 0.58rem;
+          letter-spacing: 0.28em; text-transform: uppercase; color: #8d9299; margin-bottom: 0.7rem;
+          display: inline-flex; align-items: center; gap: 8px;
+        }
+        .mp-dot { width: 6px; height: 6px; border-radius: 50%; background: #5a5e65; }
+        .mp-dot.on { background: #f1f3f5; box-shadow: 0 0 8px rgba(241,243,245,0.7); }
 
         .mp-title {
-          font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
-          font-size: clamp(1.15rem, 4vw, 1.5rem); color: rgba(240,232,245,0.95);
-          letter-spacing: 0.04em; text-align: center; max-width: 100%;
+          font-weight: 400; font-size: clamp(1.3rem, 3.4vw, 1.9rem); line-height: 1.2;
+          color: #f1f3f5; letter-spacing: 0.01em;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .mp-artist {
-          font-family: 'Inter', sans-serif; font-weight: 200; font-size: 0.58rem;
-          letter-spacing: 0.22em; text-transform: uppercase;
-          color: rgba(180,165,190,0.5); margin-top: 6px; min-height: 0.9rem; text-align: center;
+          font-family: var(--font-sans), sans-serif; font-weight: 300; font-size: 0.62rem;
+          letter-spacing: 0.22em; text-transform: uppercase; color: #8d9299; margin-top: 8px;
         }
         .mp-error {
-          font-family: 'Inter', sans-serif; font-size: 0.55rem; letter-spacing: 0.14em;
-          text-transform: uppercase; color: rgba(220,130,150,0.8); margin-top: 6px;
+          font-family: var(--font-sans), sans-serif; font-size: 0.55rem; letter-spacing: 0.14em;
+          text-transform: uppercase; color: #c8ccd2; margin-top: 8px;
         }
 
-        .mp-progress { width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 1.3rem; }
+        .mp-progress { display: flex; align-items: center; gap: 12px; margin-top: 1.6rem; }
         .mp-time {
-          font-family: 'Inter', sans-serif; font-weight: 200; font-size: 0.58rem;
-          letter-spacing: 0.1em; color: rgba(180,165,190,0.55);
-          min-width: 30px; font-variant-numeric: tabular-nums;
+          font-family: var(--font-sans), sans-serif; font-weight: 300; font-size: 0.6rem;
+          letter-spacing: 0.08em; color: #8d9299; min-width: 32px; font-variant-numeric: tabular-nums;
         }
         .mp-time.r { text-align: right; }
 
         .mp-range {
-          -webkit-appearance: none; appearance: none; flex: 1; height: 14px;
-          background: transparent; cursor: none; outline: none; --p: 0%;
+          -webkit-appearance: none; appearance: none; flex: 1; height: 18px;
+          background: transparent; cursor: pointer; outline: none; --p: 0%;
         }
         .mp-range::-webkit-slider-runnable-track {
-          height: 2px; border-radius: 2px;
-          background: linear-gradient(to right, rgba(210,185,230,0.85) var(--p), rgba(200,170,220,0.15) var(--p));
+          height: 4px; border-radius: 4px;
+          background: linear-gradient(to right, #f1f3f5 var(--p), rgba(205,210,218,0.16) var(--p));
         }
-        .mp-range::-moz-range-track { height: 2px; border-radius: 2px; background: rgba(200,170,220,0.15); }
-        .mp-range::-moz-range-progress { height: 2px; border-radius: 2px; background: rgba(210,185,230,0.85); }
+        .mp-range::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(205,210,218,0.16); }
+        .mp-range::-moz-range-progress { height: 4px; border-radius: 4px; background: #f1f3f5; }
         .mp-range::-webkit-slider-thumb {
-          -webkit-appearance: none; width: 11px; height: 11px; border-radius: 50%;
-          background: #e6d6f0; margin-top: -4.5px; border: none;
-          box-shadow: 0 0 10px rgba(196,174,208,0.6); transition: transform .2s;
+          -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
+          background: #ffffff; margin-top: -4px; border: none; box-shadow: 0 0 0 3px rgba(12,12,13,0.9);
         }
-        .mp-range::-moz-range-thumb { width: 11px; height: 11px; border-radius: 50%; background: #e6d6f0; border: none; }
-        .mp-range:hover::-webkit-slider-thumb { transform: scale(1.35); }
-        .mp-range:disabled { opacity: 0.3; }
+        .mp-range::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: none; }
+        .mp-range:disabled { opacity: 0.3; cursor: default; }
 
-        .mp-controls { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 1rem; }
+        .mp-bottom { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.2rem; flex-wrap: wrap; }
+        .mp-controls { display: flex; align-items: center; gap: 8px; }
         .mp-btn {
-          display: flex; align-items: center; justify-content: center;
-          background: none; border: none; cursor: none;
-          color: rgba(200,170,220,0.6); width: 34px; height: 34px; border-radius: 50%;
-          transition: color .25s, background .25s, transform .2s; position: relative;
+          display: flex; align-items: center; justify-content: center; position: relative;
+          background: none; border: none; cursor: pointer; color: #8d9299;
+          width: 38px; height: 38px; border-radius: 50%;
         }
-        .mp-btn:hover:not(:disabled) { color: rgba(235,220,245,0.95); background: rgba(130,80,170,0.15); }
-        .mp-btn:disabled { opacity: 0.25; }
-        .mp-btn.on { color: #d9bdf0; }
+        .mp-btn:hover:not(:disabled) { color: #f1f3f5; background: rgba(255,255,255,0.06); }
+        .mp-btn:disabled { opacity: 0.25; cursor: default; }
+        .mp-btn.on { color: #f1f3f5; }
         .mp-btn.on::after {
-          content: ''; position: absolute; bottom: 3px; left: 50%; width: 3px; height: 3px;
+          content: ''; position: absolute; bottom: 4px; left: 50%; width: 3px; height: 3px;
           border-radius: 50%; background: currentColor; transform: translateX(-50%);
         }
         .mp-play {
-          width: 52px; height: 52px; color: rgba(240,230,248,0.95);
-          border: 0.5px solid rgba(200,170,220,0.4); background: rgba(130,80,170,0.22);
+          width: 58px; height: 58px; color: #0c0c0d; margin: 0 6px;
+          background: linear-gradient(145deg, #ffffff 0%, #b9bec6 100%);
+          box-shadow: 0 10px 24px -10px rgba(255,255,255,0.35);
         }
-        .mp-play:hover:not(:disabled) { background: rgba(130,80,170,0.4); transform: scale(1.05); }
+        .mp-play:hover:not(:disabled) { color: #0c0c0d; background: #ffffff; }
         .mp-badge {
-          position: absolute; top: 4px; right: 3px; font-family: 'Inter', sans-serif;
-          font-size: 0.45rem; font-weight: 300; line-height: 1;
+          position: absolute; top: 5px; right: 4px; font-family: var(--font-sans), sans-serif;
+          font-size: 0.45rem; font-weight: 400; line-height: 1;
         }
 
-        .mp-vol { display: flex; align-items: center; gap: 8px; margin-top: 0.9rem; width: 150px; }
-        .mp-vol .mp-btn { width: 26px; height: 26px; }
+        .mp-vol { display: flex; align-items: center; gap: 6px; width: 140px; }
+        .mp-vol .mp-btn { width: 30px; height: 30px; }
+        .mp-vol .mp-range::-webkit-slider-runnable-track { height: 3px; }
+        .mp-vol .mp-range::-moz-range-track, .mp-vol .mp-range::-moz-range-progress { height: 3px; }
 
         /* ── Lista ── */
-        .mp-list { width: min(480px, 100%); margin: 0 auto; list-style: none; }
+        .mp-list { width: min(760px, 100%); margin: 0 auto; list-style: none; display: grid; gap: 8px; }
         .mp-item {
-          display: flex; align-items: center; gap: 12px; padding: 11px 12px;
-          border-radius: 12px; cursor: none; border: 0.5px solid transparent;
-          transition: background .25s, border-color .25s;
+          display: flex; align-items: center; gap: 14px; padding: 0.9rem 1rem;
+          cursor: pointer; border-radius: 14px;
+          background: #131314; border: 1px solid rgba(205,210,218,0.10);
         }
-        .mp-item:not(.soon):hover { background: rgba(130,80,170,0.10); }
-        .mp-item.active { background: rgba(130,80,170,0.16); border-color: rgba(200,170,220,0.18); }
-        .mp-item.soon { opacity: 0.4; }
+        .mp-item:not(.soon):hover { background: #1b1b1d; border-color: rgba(205,210,218,0.28); }
+        .mp-item.active { background: #1b1b1d; border-color: rgba(241,243,245,0.5); }
+        .mp-item.soon { opacity: 0.4; cursor: default; }
         .mp-num {
-          width: 20px; text-align: center; flex-shrink: 0;
-          font-family: 'Inter', sans-serif; font-weight: 200; font-size: 0.6rem;
-          color: rgba(180,165,190,0.5); font-variant-numeric: tabular-nums;
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-family: var(--font-sans), sans-serif; font-weight: 300; font-size: 0.62rem;
+          color: #8d9299; border: 1px solid rgba(205,210,218,0.16); font-variant-numeric: tabular-nums;
         }
+        .mp-item.active .mp-num { background: #f1f3f5; color: #0c0c0d; border-color: #f1f3f5; }
+        .mp-num svg { width: 12px; height: 12px; }
         .mp-item-title {
-          flex: 1; min-width: 0; font-family: 'Cormorant Garamond', serif; font-style: italic;
-          font-weight: 300; font-size: 1rem; color: rgba(230,220,235,0.9);
+          flex: 1; min-width: 0; font-weight: 400; font-size: 0.98rem; color: #c8ccd2;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .mp-item.active .mp-item-title { color: #e8d4f5; }
+        .mp-item.active .mp-item-title { color: #ffffff; }
         .mp-tag {
-          font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 0.18em;
-          text-transform: uppercase; color: rgba(200,180,215,0.5);
-          border: 0.5px solid rgba(200,170,220,0.2); border-radius: 100px; padding: 3px 9px;
+          font-family: var(--font-sans), sans-serif; font-size: 0.5rem; letter-spacing: 0.18em;
+          text-transform: uppercase; color: #8d9299;
+          border: 1px solid rgba(205,210,218,0.2); border-radius: 100px; padding: 4px 10px;
         }
-        .mp-eq { display: flex; align-items: flex-end; gap: 2px; height: 12px; width: 14px; }
-        .mp-eq i { display: block; width: 2px; background: #d9bdf0; border-radius: 1px; height: 30%; }
-        .mp-eq.on i { animation: mp-eq 0.9s ease-in-out infinite; }
-        .mp-eq.on i:nth-child(2) { animation-delay: .25s; }
-        .mp-eq.on i:nth-child(3) { animation-delay: .5s; }
-        @keyframes mp-eq { 0%,100% { height: 25%; } 50% { height: 100%; } }
 
-        .mp-empty {
-          text-align: center; font-family: 'Cormorant Garamond', serif; font-style: italic;
-          color: rgba(190,175,200,0.55); padding: 1.2rem 0 0.4rem; font-size: 1rem;
+        .mp-empty { text-align: center; color: #8d9299; padding: 1.2rem 0 0.4rem; font-size: 1rem; }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+          .mp-player { grid-template-columns: 1fr; gap: 1.3rem; padding: 1.1rem; border-radius: 18px; }
+          .mp-cover { width: min(260px, 100%); margin: 0 auto; }
+          .mp-info { align-items: stretch; text-align: center; }
+          .mp-kicker { justify-content: center; }
+          .mp-bottom { flex-direction: column; gap: 0.8rem; }
+          .mp-vol { width: min(220px, 100%); }
+          .mp-item { padding: 0.75rem 0.8rem; gap: 11px; }
         }
-      `}</style>
+      
+`}</style>
 
       {/* El audio vive siempre montado: no se corta al cambiar a "poemas" */}
       <audio
@@ -344,66 +354,75 @@ export default function MusicPlayer({ tracks, hidden = false }: Props) {
       />
 
       <div className="mp-player">
-        <div className={`mp-cover ${playing ? "on" : ""}`}>
+        <div className="mp-cover">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={track?.cover ?? DEFAULT_COVER} alt={track?.title ?? "portada"} />
         </div>
 
-        <p className="mp-title">{track ? track.title : "sin canciones aún"}</p>
-        <p className="mp-artist">{track?.artist ?? (hasTracks ? "teescribisinnombre" : "próximamente")}</p>
-        {error && <p className="mp-error">no se pudo cargar el audio</p>}
+        <div className="mp-info">
+          <span className="mp-kicker">
+            <i className={`mp-dot ${playing ? "on" : ""}`} />
+            {playing ? "reproduciendo" : "en pausa"}
+          </span>
+          <p className="mp-title">{track ? track.title : "sin canciones aún"}</p>
+          <p className="mp-artist">{track?.artist ?? (hasTracks ? "teescribisinnombre" : "próximamente")}</p>
+          {error && <p className="mp-error">no se pudo cargar el audio</p>}
 
-        <div className="mp-progress">
-          <span className="mp-time">{fmt(current)}</span>
-          <input
-            type="range"
-            className="mp-range"
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={Math.min(current, duration || 0)}
-            disabled={!hasTracks || !duration}
-            onChange={(e) => seek(Number(e.target.value))}
-            style={{ ["--p" as string]: `${pct}%` }}
-            aria-label="Progreso"
-          />
-          <span className="mp-time r">{fmt(duration)}</span>
-        </div>
+          <div className="mp-progress">
+            <span className="mp-time">{fmt(current)}</span>
+            <input
+              type="range"
+              className="mp-range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={Math.min(current, duration || 0)}
+              disabled={!hasTracks || !duration}
+              onChange={(e) => seek(Number(e.target.value))}
+              style={{ ["--p" as string]: `${pct}%` }}
+              aria-label="Progreso"
+            />
+            <span className="mp-time r">{fmt(duration)}</span>
+          </div>
 
-        <div className="mp-controls">
-          <button className={`mp-btn ${shuffle ? "on" : ""}`} onClick={() => setShuffle((s) => !s)} disabled={playable.length < 2} aria-label="Aleatorio" title="Aleatorio">
-            {Icon.shuffle}
-          </button>
-          <button className="mp-btn" onClick={prev} disabled={!hasTracks} aria-label="Anterior">{Icon.prev}</button>
-          <button className="mp-btn mp-play" onClick={toggle} disabled={!hasTracks} aria-label={playing ? "Pausar" : "Reproducir"}>
-            {playing ? Icon.pause : Icon.play}
-          </button>
-          <button className="mp-btn" onClick={() => step(1)} disabled={!hasTracks} aria-label="Siguiente">{Icon.next}</button>
-          <button className={`mp-btn ${repeat !== "off" ? "on" : ""}`} onClick={cycleRepeat} disabled={!hasTracks} aria-label="Repetir" title={`Repetir: ${repeat}`}>
-            {Icon.repeat}
-            {repeat === "one" && <span className="mp-badge">1</span>}
-          </button>
-        </div>
+          <div className="mp-bottom">
+            <div className="mp-controls">
+              <button className={`mp-btn ${shuffle ? "on" : ""}`} onClick={() => setShuffle((s) => !s)} disabled={playable.length < 2} aria-label="Aleatorio" title="Aleatorio">
+                {Icon.shuffle}
+              </button>
+              <button className="mp-btn" onClick={prev} disabled={!hasTracks} aria-label="Anterior">{Icon.prev}</button>
+              <button className="mp-btn mp-play" onClick={toggle} disabled={!hasTracks} aria-label={playing ? "Pausar" : "Reproducir"}>
+                {playing ? Icon.pause : Icon.play}
+              </button>
+              <button className="mp-btn" onClick={() => step(1)} disabled={!hasTracks} aria-label="Siguiente">{Icon.next}</button>
+              <button className={`mp-btn ${repeat !== "off" ? "on" : ""}`} onClick={cycleRepeat} disabled={!hasTracks} aria-label="Repetir" title={`Repetir: ${repeat}`}>
+                {Icon.repeat}
+                {repeat === "one" && <span className="mp-badge">1</span>}
+              </button>
+            </div>
 
-        <div className="mp-vol">
-          <button className="mp-btn" onClick={() => setMuted((m) => !m)} aria-label={muted ? "Activar sonido" : "Silenciar"}>
-            {muted || volume === 0 ? Icon.mute : Icon.vol}
-          </button>
-          <input
-            type="range"
-            className="mp-range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={muted ? 0 : volume}
-            onChange={(e) => { setVolume(Number(e.target.value)); setMuted(false); }}
-            style={{ ["--p" as string]: `${volPct}%` }}
-            aria-label="Volumen"
-          />
+            <div className="mp-vol">
+              <button className="mp-btn" onClick={() => setMuted((m) => !m)} aria-label={muted ? "Activar sonido" : "Silenciar"}>
+                {muted || volume === 0 ? Icon.mute : Icon.vol}
+              </button>
+              <input
+                type="range"
+                className="mp-range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={muted ? 0 : volume}
+                onChange={(e) => { setVolume(Number(e.target.value)); setMuted(false); }}
+                style={{ ["--p" as string]: `${volPct}%` }}
+                aria-label="Volumen"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Lista de reproducción ── */}
+      
+{/* ── Lista de reproducción ── */}
       <ul className="mp-list">
         {tracks.map((t, i) => {
           const isPlayable = playable.includes(i);
@@ -419,11 +438,7 @@ export default function MusicPlayer({ tracks, hidden = false }: Props) {
               }}
             >
               <span className="mp-num">
-                {active && isPlayable ? (
-                  <span className={`mp-eq ${playing ? "on" : ""}`}><i /><i /><i /></span>
-                ) : (
-                  String(i + 1).padStart(2, "0")
-                )}
+                {active && isPlayable ? (playing ? Icon.pause : Icon.play) : String(i + 1).padStart(2, "0")}
               </span>
               <span className="mp-item-title">{t.title}</span>
               {!isPlayable && <span className="mp-tag">próximamente</span>}

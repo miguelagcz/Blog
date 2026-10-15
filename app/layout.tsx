@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -14,9 +14,21 @@ const cormorant = Cormorant_Garamond({
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["200", "300"],
+  weight: ["300", "400"],
   display: "swap",
 });
+
+const playfair = Playfair_Display({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
+
+export const viewport: Viewport = {
+  themeColor: "#0c0c0d",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
   // ── Títulos ──────────────────────────────────────────────────
@@ -102,7 +114,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="es" className={`${cormorant.variable} ${inter.variable} ${playfair.variable}`}>
       <head>
         {/* Schema.org — datos estructurados para Google */}
         <script
